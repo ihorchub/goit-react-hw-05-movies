@@ -1,8 +1,11 @@
-import { Link, useSearchParams, useLocation } from 'react-router-dom';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import themoviedbAPI from 'Api/ThemoviedbAPI';
+import { helpers } from 'ApiHelpers/helpers';
+import axios from 'axios';
+import { Button, FilmItem, Title, FilmLink } from './Movies.styled';
 
-const fetchMovies = new themoviedbAPI();
+const { baseUrl, key } = helpers;
+axios.defaults.baseURL = baseUrl;
 
 const Movies = () => {
   const [movies, setMovies] = useState([]);
@@ -13,16 +16,26 @@ const Movies = () => {
   useEffect(() => {
     if (query === '') return;
 
+    const controller = new AbortController();
+
     async function getMovies() {
       try {
-        const response = await fetchMovies.fetchBySearch(query);
+        const response = await axios.get(
+          `/search/movie?api_key=${key}&query=${query}`,
+          {
+            signal: controller.signal,
+          }
+        );
         setMovies(response.data.results);
       } catch (error) {
         console.log(error);
       }
     }
-
     getMovies();
+
+    return () => {
+      controller.abort();
+    };
   }, [query]);
 
   const handleSubmit = e => {
@@ -41,18 +54,18 @@ const Movies = () => {
     <>
       <form onSubmit={handleSubmit}>
         <input type="text" name="query" />
-        <button type="submit">Search</button>
+        <Button type="submit">Search</Button>
       </form>
       {movies.length > 0 && (
         <div>
-          <h1>{`Result on request "${query}"`}</h1>
+          <Title>{`Result on request "${query}"`}</Title>
           <ul>
             {movies.map(({ id, original_title }) => (
-              <li key={id}>
-                <Link to={`/movies/${id}`} state={{ from: location }}>
+              <FilmItem key={id}>
+                <FilmLink to={`/movies/${id}`} state={{ from: location }}>
                   {original_title}
-                </Link>
-              </li>
+                </FilmLink>
+              </FilmItem>
             ))}
           </ul>
         </div>

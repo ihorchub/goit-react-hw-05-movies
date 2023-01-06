@@ -1,41 +1,51 @@
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { helpers } from 'ApiHelpers/helpers';
+import axios from 'axios';
+import { FilmItem, FilmLink, Title } from './Home.styled';
 
-import ThemoviedbAPI from 'Api/ThemoviedbAPI';
-
-const fetchTrending = new ThemoviedbAPI();
+const { baseUrl, key } = helpers;
+axios.defaults.baseURL = baseUrl;
 
 const Home = () => {
   const [trends, setTrends] = useState([]);
   const location = useLocation();
 
   useEffect(() => {
+    const controller = new AbortController();
+
     async function getTrends() {
       try {
-        const response = await fetchTrending.fetchTrending();
+        const response = await axios.get(`/trending/movie/day?api_key=${key}`, {
+          signal: controller.signal,
+        });
         setTrends(response.data.results);
       } catch (error) {
         console.log(error);
       }
     }
     getTrends();
+
+    return () => {
+      controller.abort();
+    };
   }, []);
 
   return (
-    <div>
-      <h1>Trending today</h1>
+    <>
+      <Title>Trending today</Title>
       {trends.length > 0 && (
         <ul>
           {trends.map(({ id, original_title }) => (
-            <li key={id}>
-              <Link to={`/movies/${id}`} state={{ from: location }}>
+            <FilmItem key={id}>
+              <FilmLink to={`/movies/${id}`} state={{ from: location }}>
                 {original_title}
-              </Link>
-            </li>
+              </FilmLink>
+            </FilmItem>
           ))}
         </ul>
       )}
-    </div>
+    </>
   );
 };
 
