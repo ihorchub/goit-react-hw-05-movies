@@ -8,7 +8,7 @@ import {
 import { useState, useEffect } from 'react';
 import ThemoviedbAPI from 'Api/ThemoviedbAPI';
 
-const fetchMovie = new ThemoviedbAPI();
+const fetchDetails = new ThemoviedbAPI();
 
 const MovieDetails = () => {
   const { movieId } = useParams();
@@ -22,7 +22,7 @@ const MovieDetails = () => {
   useEffect(() => {
     async function getMovie() {
       try {
-        const response = await fetchMovie.fetchById(movieId);
+        const response = await fetchDetails.fetchById(movieId);
         const movieInfo = response.data;
         setPoster(`https://image.tmdb.org/t/p/w500${movieInfo.poster_path}`);
         setTitle(movieInfo.title);
@@ -38,9 +38,11 @@ const MovieDetails = () => {
 
   const getGenres = () => genres.map(item => item.name).join(', ');
 
+  const backLinkHref = location.state?.from ?? '/';
+
   return (
     <article>
-      <Link to={location.state.from}>Go back</Link>
+      <Link to={backLinkHref}>Go back</Link>
       <div>
         <img src={poster} alt={`poster by ${title} movie`} />
         <div>
@@ -52,16 +54,17 @@ const MovieDetails = () => {
           <p>{getGenres()}</p>
         </div>
       </div>
+
       <div>
         <h5>Additional information</h5>
         <ul>
           <li>
-            <NavLink to="cast" state={{ from: '/movies/:movieId' }}>
+            <NavLink to="cast" state={{ from: backLinkHref }}>
               Cast
             </NavLink>
           </li>
           <li>
-            <NavLink to="reviews" state={{ from: '/movies/:movieId' }}>
+            <NavLink to="reviews" state={{ from: backLinkHref }}>
               Reviews
             </NavLink>
           </li>
